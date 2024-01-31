@@ -35,7 +35,10 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
                 )
                 .httpBasic(Customizer.withDefaults())
-                .formLogin(customizer -> customizer.failureHandler(authenticationFailureHandler()))
+                .formLogin(customizer -> {
+                    customizer.failureHandler(authenticationFailureHandler());
+                    customizer.defaultSuccessUrl("/home");
+                })
                 .exceptionHandling(customizer -> customizer.accessDeniedHandler(accessDeniedHandler()))
                 .logout(Customizer.withDefaults())
                 .build();
