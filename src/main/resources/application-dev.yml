@@ -6,3 +6,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: create-drop
+
+client:
+  url: http://localhost:8080
