@@ -16,6 +16,7 @@ import org.example.utils.credentials.CredentialsGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,7 @@ public class TraineeService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public Trainee createTrainee(String firstName, String lastName, Date dateOfBirth, String address) {
         User newUser = buildNewUser(firstName, lastName);
         Trainee newTrainee = buildNewTrainee(dateOfBirth, address, newUser);

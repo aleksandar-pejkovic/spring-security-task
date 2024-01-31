@@ -20,7 +20,9 @@ import org.example.repository.TrainerRepository;
 import org.example.repository.TrainingTypeRepository;
 import org.example.utils.credentials.CredentialsGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -37,16 +39,19 @@ public class TrainerService {
 
     private final TrainingTypeRepository trainingTypeRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
     public TrainerService(TrainerRepository trainerRepository, TraineeRepository traineeRepository,
-                          CredentialsGenerator credentialsGenerator, TrainingTypeRepository trainingTypeRepository) {
+                          CredentialsGenerator credentialsGenerator, TrainingTypeRepository trainingTypeRepository, PasswordEncoder passwordEncoder) {
         this.trainerRepository = trainerRepository;
         this.traineeRepository = traineeRepository;
         this.generator = credentialsGenerator;
         this.trainingTypeRepository = trainingTypeRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public Trainer createTrainer(String firstName, String lastName, TrainingTypeName specialization) {
         TrainingType trainingType = trainingTypeRepository.findByTrainingTypeName(specialization)
                 .orElseThrow(() -> new TrainingTypeNotFoundException("Training type not found"));
@@ -54,10 +59,12 @@ public class TrainerService {
         Trainer newTrainer = buildNewTrainer(newUser, trainingType);
         String username = generator.generateUsername(newTrainer.getUser());
         String password = generator.generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(password);
         newTrainer.setUsername(username);
-        newTrainer.setPassword(password);
+        newTrainer.setPassword(passwordEncoder.encode(encodedPassword));
         Trainer savedTrained = trainerRepository.save(newTrainer);
         log.info("Trainer successfully saved");
+        savedTrained.setPassword(password);
         return savedTrained;
     }
 
