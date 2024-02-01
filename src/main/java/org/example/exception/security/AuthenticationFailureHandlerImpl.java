@@ -3,11 +3,16 @@ package org.example.exception.security;
 import java.io.IOException;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
+import org.example.service.LoginAttemptService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.web.servlet.LocaleResolver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -15,9 +20,19 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
+public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private MessageSource messages;
+
+    @Autowired
+    private LoginAttemptService loginAttemptService;
+
+    @Autowired
+    private LocaleResolver localeResolver;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Override
     public void onAuthenticationFailure(
@@ -26,14 +41,18 @@ public class CustomAuthenticationFailureHandler implements AuthenticationFailure
             AuthenticationException exception)
             throws IOException, ServletException {
 
+
+        Locale locale = localeResolver.resolveLocale(request);
+
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         Map<String, Object> data = new HashMap<>();
-        data.put(
-                "timestamp",
-                Calendar.getInstance().getTime());
-        data.put(
-                "exception",
-                exception.getMessage());
+        data.put("timestamp", Calendar.getInstance().getTime());
+        data.put("exception", exception.getMessage());
+
+        if (loginAttemptService.isBlocked()) {
+            String blockedErrorMessage = messages.getMessage("auth.message.blocked", null, locale);
+            data.put("errorMessage", blockedErrorMessage);
+        }
 
         response.getOutputStream()
                 .println(objectMapper.writeValueAsString(data));

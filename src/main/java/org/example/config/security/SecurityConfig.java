@@ -2,8 +2,8 @@ package org.example.config.security;
 
 import javax.crypto.spec.SecretKeySpec;
 
-import org.example.exception.security.CustomAccessDeniedHandler;
-import org.example.exception.security.CustomAuthenticationFailureHandler;
+import org.example.exception.security.AccessDeniedHandlerImpl;
+import org.example.exception.security.AuthenticationFailureHandlerImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -80,11 +80,11 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationFailureHandler authenticationFailureHandler() {
-        return new CustomAuthenticationFailureHandler();
+        return new AuthenticationFailureHandlerImpl();
     }
 
     @Bean
     public AccessDeniedHandler accessDeniedHandler() {
-        return new CustomAccessDeniedHandler();
+        return new AccessDeniedHandlerImpl();
     }
 }
