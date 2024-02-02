@@ -23,13 +23,7 @@ import jakarta.servlet.http.HttpServletResponse;
 public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHandler {
 
     @Autowired
-    private MessageSource messages;
-
-    @Autowired
     private LoginAttemptService loginAttemptService;
-
-    @Autowired
-    private LocaleResolver localeResolver;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -41,17 +35,13 @@ public class AuthenticationFailureHandlerImpl implements AuthenticationFailureHa
             AuthenticationException exception)
             throws IOException, ServletException {
 
-
-        Locale locale = localeResolver.resolveLocale(request);
-
         response.setStatus(HttpStatus.UNAUTHORIZED.value());
         Map<String, Object> data = new HashMap<>();
         data.put("timestamp", Calendar.getInstance().getTime());
         data.put("exception", exception.getMessage());
 
         if (loginAttemptService.isBlocked()) {
-            String blockedErrorMessage = messages.getMessage("auth.message.blocked", null, locale);
-            data.put("errorMessage", blockedErrorMessage);
+            data.put("blockedRequest", "Blocked for 5 minutes after 3 unsuccessful attempts");
         }
 
         response.getOutputStream()

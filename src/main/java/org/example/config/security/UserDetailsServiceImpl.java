@@ -21,9 +21,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Autowired
     private LoginAttemptService loginAttemptService;
 
-    @Autowired
-    private HttpServletRequest request;
-
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String username) {
