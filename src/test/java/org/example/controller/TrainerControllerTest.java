@@ -94,7 +94,7 @@ class TrainerControllerTest {
     }
 
     @Test
-    void traineeRegistration() throws Exception {
+    void shouldReturnOkWhenTrainerRegistration() throws Exception {
         when(trainerService.createTrainer(anyString(), anyString(), any())).thenReturn(trainerUnderTest);
 
         mockMvc.perform(post(URL_TEMPLATE)
@@ -109,8 +109,17 @@ class TrainerControllerTest {
     }
 
     @Test
+    void shouldReturnBadRequestForNullParametersWhenTrainerRegistration() throws Exception {
+        mockMvc.perform(post(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isBadRequest());
+
+        verify(trainerService, never()).createTrainer(anyString(), anyString(), any());
+    }
+
+    @Test
     @WithMockUser
-    void changeLogin() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenChangeLogin() throws Exception {
         CredentialsUpdateDTO credentialsUpdateDTO = CredentialsUpdateDTO.builder()
                 .username(USERNAME)
                 .oldPassword(PASSWORD)
@@ -123,6 +132,23 @@ class TrainerControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(credentialsUpdateDTO)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserWhenChangeLogin() throws Exception {
+        CredentialsUpdateDTO credentialsUpdateDTO = CredentialsUpdateDTO.builder()
+                .username(USERNAME)
+                .oldPassword(PASSWORD)
+                .newPassword(NEW_PASSWORD)
+                .build();
+
+        when(trainerService.changePassword(any())).thenReturn(trainerUnderTest);
+
+        mockMvc.perform(put(URL_TEMPLATE + URL_CHANGE_LOGIN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(credentialsUpdateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -144,7 +170,7 @@ class TrainerControllerTest {
 
     @Test
     @WithMockUser
-    void getTrainerByUsername() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenGetTrainerByUsername() throws Exception {
         when(trainerService.getTrainerByUsername(any())).thenReturn(trainerUnderTest);
 
         mockMvc.perform(get(URL_TEMPLATE + URL_USERNAME, USERNAME)
@@ -167,8 +193,18 @@ class TrainerControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserGetTraineeByUsername() throws Exception {
+        when(trainerService.getTrainerByUsername(anyString())).thenReturn(trainerUnderTest);
+
+        mockMvc.perform(get(URL_TEMPLATE + URL_USERNAME, USERNAME)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser
-    void updateTrainerProfile() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenUpdateTrainerProfile() throws Exception {
         TrainerUpdateDTO trainerUpdateDTO = TrainerUpdateDTO.builder()
                 .username(USERNAME)
                 .firstName(FIRST_NAME)
@@ -189,8 +225,27 @@ class TrainerControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserUpdateTraineeProfile() throws Exception {
+        TrainerUpdateDTO trainerUpdateDTO = TrainerUpdateDTO.builder()
+                .username(USERNAME)
+                .firstName(FIRST_NAME)
+                .lastName(LAST_NAME)
+                .specialization(TrainingTypeName.AEROBIC)
+                .isActive(true)
+                .build();
+
+        when(trainerService.updateTrainer(any())).thenReturn(trainerUnderTest);
+
+        mockMvc.perform(put(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trainerUpdateDTO)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser
-    void deleteTrainerProfile() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenDeleteTrainerProfile() throws Exception {
         when(trainerService.deleteTrainer(anyString())).thenReturn(true);
 
         mockMvc.perform(delete(URL_TEMPLATE)
@@ -208,6 +263,17 @@ class TrainerControllerTest {
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param(PARAM_USERNAME, USERNAME))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserWhenDeleteTraineeProfile() throws Exception {
+        when(trainerService.deleteTrainer(anyString())).thenReturn(true);
+
+        mockMvc.perform(delete(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(PARAM_USERNAME, USERNAME))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -237,7 +303,7 @@ class TrainerControllerTest {
 
     @Test
     @WithMockUser(authorities = {ROLE_ADMIN})
-    void toggleTraineeActivation() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenToggleTrainerActivation() throws Exception {
         when(trainerService.toggleTrainerActivation(USERNAME, true)).thenReturn(true);
 
         mockMvc.perform(patch(URL_TEMPLATE)
