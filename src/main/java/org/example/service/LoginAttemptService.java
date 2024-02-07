@@ -19,11 +19,12 @@ public class LoginAttemptService {
     private static final int BAN_DURATION = 5;
     private final LoadingCache<String, Integer> attemptsCache;
 
-    @Autowired
-    private HttpServletRequest request;
+    private final HttpServletRequest request;
 
-    public LoginAttemptService() {
+    @Autowired
+    public LoginAttemptService(HttpServletRequest request) {
         super();
+        this.request = request;
         attemptsCache = CacheBuilder.newBuilder().expireAfterWrite(BAN_DURATION, TimeUnit.MINUTES)
                 .build(new CacheLoader<String, Integer>() {
                     @Override
