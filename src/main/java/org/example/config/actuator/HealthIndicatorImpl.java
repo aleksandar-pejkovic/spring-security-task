@@ -6,11 +6,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
-public class CustomHealthIndicator implements HealthIndicator {
+public class HealthIndicatorImpl implements HealthIndicator {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public CustomHealthIndicator(JdbcTemplate jdbcTemplate) {
+    public HealthIndicatorImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 

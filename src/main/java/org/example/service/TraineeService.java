@@ -14,7 +14,9 @@ import org.example.model.User;
 import org.example.repository.TraineeRepository;
 import org.example.utils.credentials.CredentialsGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.extern.slf4j.Slf4j;
@@ -27,22 +29,29 @@ public class TraineeService {
 
     private final CredentialsGenerator generator;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Autowired
-    public TraineeService(TraineeRepository traineeRepository, CredentialsGenerator credentialsGenerator) {
+    public TraineeService(TraineeRepository traineeRepository,
+                          CredentialsGenerator credentialsGenerator,
+                          PasswordEncoder passwordEncoder) {
         this.traineeRepository = traineeRepository;
         this.generator = credentialsGenerator;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.SUPPORTS)
     public Trainee createTrainee(String firstName, String lastName, Date dateOfBirth, String address) {
         User newUser = buildNewUser(firstName, lastName);
         Trainee newTrainee = buildNewTrainee(dateOfBirth, address, newUser);
         String username = generator.generateUsername(newTrainee.getUser());
         String password = generator.generateRandomPassword();
+        String encodedPassword = passwordEncoder.encode(password);
         newTrainee.setUsername(username);
-        newTrainee.setPassword(password);
+        newTrainee.setPassword(encodedPassword);
         Trainee savedTrainee = traineeRepository.save(newTrainee);
         log.info("Trainee successfully created");
+        savedTrainee.setPassword(password);
         return savedTrainee;
     }
 

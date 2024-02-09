@@ -6,12 +6,12 @@ import org.springframework.stereotype.Service;
 import io.micrometer.core.instrument.MeterRegistry;
 
 @Service
-public class CustomMetricsService {
+public class MetricsServiceImpl {
 
     private final MeterRegistry meterRegistry;
 
     @Autowired
-    public CustomMetricsService(MeterRegistry meterRegistry) {
+    public MetricsServiceImpl(MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
 

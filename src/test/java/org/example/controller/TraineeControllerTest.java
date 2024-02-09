@@ -85,7 +85,7 @@ public class TraineeControllerTest {
     }
 
     @Test
-    void traineeRegistration() throws Exception {
+    void shouldReturnOkWhenTraineeRegistration() throws Exception {
         when(traineeService.createTrainee(any(), any(), any(), any())).thenReturn(traineeUnderTest);
 
         mockMvc.perform(post(URL_TEMPLATE)
@@ -96,11 +96,22 @@ public class TraineeControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath(JSON_PATH_USERNAME).value(USERNAME))
                 .andExpect(jsonPath(JSON_PATH_PASSWORD).value(PASSWORD));
+
+        verify(traineeService).createTrainee(anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    void shouldReturnBadRequestForNullParametersWhenTraineeRegistration() throws Exception {
+        mockMvc.perform(post(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isBadRequest());
+
+        verify(traineeService, never()).createTrainee(anyString(), anyString(), any(), anyString());
     }
 
     @Test
     @WithMockUser
-    void changeLogin() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenChangeLogin() throws Exception {
         CredentialsUpdateDTO credentialsUpdateDTO = CredentialsUpdateDTO.builder()
                 .username(USERNAME)
                 .oldPassword(PASSWORD)
@@ -113,6 +124,23 @@ public class TraineeControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(credentialsUpdateDTO)))
                 .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserWhenChangeLogin() throws Exception {
+        CredentialsUpdateDTO credentialsUpdateDTO = CredentialsUpdateDTO.builder()
+                .username(USERNAME)
+                .oldPassword(PASSWORD)
+                .newPassword(NEW_PASSWORD)
+                .build();
+
+        when(traineeService.changePassword(any())).thenReturn(traineeUnderTest);
+
+        mockMvc.perform(put(URL_TEMPLATE + URL_CHANGE_LOGIN)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(credentialsUpdateDTO)))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -134,7 +162,7 @@ public class TraineeControllerTest {
 
     @Test
     @WithMockUser
-    void getTraineeByUsername() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenGetTraineeByUsername() throws Exception {
         when(traineeService.getTraineeByUsername(anyString())).thenReturn(traineeUnderTest);
 
         mockMvc.perform(get(URL_TEMPLATE + URL_USERNAME, USERNAME)
@@ -157,8 +185,18 @@ public class TraineeControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserGetTraineeByUsername() throws Exception {
+        when(traineeService.getTraineeByUsername(anyString())).thenReturn(traineeUnderTest);
+
+        mockMvc.perform(get(URL_TEMPLATE + URL_USERNAME, USERNAME)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser
-    void updateTraineeProfile() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenUpdateTraineeProfile() throws Exception {
         TraineeUpdateDTO traineeUpdateDTO = TraineeUpdateDTO.builder()
                 .username(USERNAME)
                 .firstName(FIRST_NAME)
@@ -178,8 +216,25 @@ public class TraineeControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserUpdateTraineeProfile() throws Exception {
+        TraineeUpdateDTO traineeUpdateDTO = TraineeUpdateDTO.builder()
+                .username(USERNAME)
+                .firstName(FIRST_NAME)
+                .lastName(LAST_NAME)
+                .build();
+
+        when(traineeService.updateTrainee(any())).thenReturn(traineeUnderTest);
+
+        mockMvc.perform(put(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(traineeUpdateDTO)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser
-    void deleteTraineeProfile() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenDeleteTraineeProfile() throws Exception {
         when(traineeService.deleteTrainee(anyString())).thenReturn(true);
 
         mockMvc.perform(delete(URL_TEMPLATE)
@@ -190,7 +245,7 @@ public class TraineeControllerTest {
 
     @Test
     @WithMockUser
-    void deleteTraineeProfileReturnsBadRequestWhenDeletionUnsuccessful() throws Exception {
+    void shouldReturnBadRequestForAuthenticatedUserWhenDeleteTraineeProfile() throws Exception {
         when(traineeService.deleteTrainee(anyString())).thenReturn(false);
 
         mockMvc.perform(delete(URL_TEMPLATE)
@@ -200,8 +255,19 @@ public class TraineeControllerTest {
     }
 
     @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForAnonymousUserWhenDeleteTraineeProfile() throws Exception {
+        when(traineeService.deleteTrainee(anyString())).thenReturn(true);
+
+        mockMvc.perform(delete(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(PARAM_USERNAME, USERNAME))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @WithMockUser(authorities = {ROLE_ADMIN})
-    void toggleTraineeActivation() throws Exception {
+    void shouldReturnOkForAuthenticatedUserWhenToggleTraineeActivation() throws Exception {
         when(traineeService.toggleTraineeActivation(anyString(), anyBoolean())).thenReturn(true);
 
         mockMvc.perform(patch(URL_TEMPLATE)
@@ -225,7 +291,19 @@ public class TraineeControllerTest {
 
     @Test
     @WithAnonymousUser
-    void shouldReturnUnauthorizedForUnauthenticatedUser() throws Exception {
+    void shouldReturnUnauthorizedForAnonymousUserWhenToggleTraineeActivation() throws Exception {
+        when(traineeService.toggleTraineeActivation(anyString(), anyBoolean())).thenReturn(true);
+
+        mockMvc.perform(patch(URL_TEMPLATE)
+                        .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                        .param(PARAM_USERNAME, USERNAME)
+                        .param(PARAM_IS_ACTIVE, ACTIVE_STATUS))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @WithAnonymousUser
+    void shouldReturnUnauthorizedForUnauthenticatedUserWhenToggleTraineeActivation() throws Exception {
         mockMvc.perform(patch(URL_TEMPLATE)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param(PARAM_USERNAME, USERNAME)
@@ -237,7 +315,7 @@ public class TraineeControllerTest {
 
     @Test
     @WithMockUser(username = USERNAME, authorities = {ROLE_TEST})
-    void shouldReturnForbiddenForUnauthorizedUser() throws Exception {
+    void shouldReturnForbiddenForUnauthorizedUserWhenToggleTraineeActivation() throws Exception {
         mockMvc.perform(patch(URL_TEMPLATE)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param(PARAM_USERNAME, USERNAME)
@@ -249,7 +327,7 @@ public class TraineeControllerTest {
 
     @Test
     @WithAnonymousUser
-    void shouldReturnUnAuthorizedForAnonymousUser() throws Exception {
+    void shouldReturnUnAuthorizedForAnonymousUserWhenToggleTraineeActivation() throws Exception {
         mockMvc.perform(patch(URL_TEMPLATE)
                         .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                         .param(PARAM_USERNAME, USERNAME)
